@@ -370,7 +370,7 @@
     <div class="form-group"><label>Location *</label><input type="text" id="evLocation" placeholder="Marina Beach, Chennai"/></div>
     <div class="modal-actions">
       <button class="btn" style="background:#f0f0f0;color:var(--dark);" onclick="closeModal('createModal')">Cancel</button>
-      <button class="btn btn-green" onclick="createEvent()">Create Event</button>
+      <button class="btn btn-green" onclick="submitCreateEvent()">Create Event</button>
     </div>
   </div>
 </div>
@@ -933,19 +933,24 @@ async function applyEvent(eventId, btn) {
 function openCreateModal() { document.getElementById('createModal').classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-async function createEvent() {
-  const title=document.getElementById('evTitle').value.trim();
-  const desc=document.getElementById('evDesc').value.trim();
-  const date=document.getElementById('evDate').value;
-  const location=document.getElementById('evLocation').value.trim();
-  if (!title||!date||!location) return toast('Please fill required fields','error');
+async function submitCreateEvent() {
+  const title = document.getElementById('evTitle').value.trim();
+  const desc = document.getElementById('evDesc').value.trim();
+  const date = document.getElementById('evDate').value;
+  const location = document.getElementById('evLocation').value.trim();
+
+  if (!title || !date || !location) return toast('Please fill required fields', 'error');
+
   try {
-    await api('/api/events/create','POST',{title,description:desc,date:date+':00',location});
+    await api('/api/events/create', 'POST', { title, description: desc, date: date + ':00', location });
     closeModal('createModal');
-    toast('Event created! 🌿','success');
-    loadAdminEvents(); loadAllEvents();
-    ['evTitle','evDesc','evDate','evLocation'].forEach(id=>document.getElementById(id).value='');
-  } catch(e) { toast(e.message,'error'); }
+    toast('Event created! 🌿', 'success');
+    loadAdminEvents();
+    loadAllEvents();
+    ['evTitle', 'evDesc', 'evDate', 'evLocation'].forEach(id => document.getElementById(id).value = '');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
 }
 
 async function deleteEvent(id) {
