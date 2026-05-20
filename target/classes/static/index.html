@@ -258,6 +258,7 @@
       <div class="section-title" id="eventsPageTitle">📅 All Events</div>
       <div id="adminCreateBtn" style="display:none;">
         <button class="btn btn-green" onclick="openCreateModal()" style="padding:10px 20px;font-size:14px;">+ Create Event</button>
+        <button class="btn btn-accent" onclick="seedSampleEvents()" style="padding:10px 20px;font-size:14px;margin-left:8px;">🌱 Add Sample Events</button>
       </div>
     </div>
     <div class="cards-grid" id="allEventsList"><div class="loading"><div class="spinner"></div>Loading...</div></div>
@@ -341,6 +342,7 @@
     <div id="adminEvents">
       <div style="margin-bottom:16px;text-align:right;">
         <button class="btn btn-green" onclick="openCreateModal()" style="padding:10px 20px;font-size:14px;">+ Create Event</button>
+        <button class="btn btn-accent" onclick="seedSampleEvents()" style="padding:10px 20px;font-size:14px;margin-left:8px;">🌱 Add Sample Events</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -932,24 +934,43 @@ async function applyEvent(eventId, btn) {
 // ══════════════════════════════════════
 function openCreateModal() { document.getElementById('createModal').classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-<!-- redeploy fix -->
+
 async function submitCreateEvent() {
-  const title = document.getElementById('evTitle').value.trim();
-  const desc = document.getElementById('evDesc').value.trim();
-  const date = document.getElementById('evDate').value;
+  const title    = document.getElementById('evTitle').value.trim();
+  const desc     = document.getElementById('evDesc').value.trim();
+  const dateVal  = document.getElementById('evDate').value;
   const location = document.getElementById('evLocation').value.trim();
 
-  if (!title || !date || !location) return toast('Please fill required fields', 'error');
+  // Validate required fields
+  if (!title)    return toast('Please enter event title!', 'error');
+  if (!dateVal)  return toast('Please select event date!', 'error');
+  if (!location) return toast('Please enter event location!', 'error');
+
+  // Format date correctly for backend: "2027-09-15T09:00:00"
+  let formattedDate = dateVal;
+  if (dateVal.length === 16) {
+    formattedDate = dateVal + ':00'; // add seconds if missing
+  }
 
   try {
-    await api('/api/events/create', 'POST', { title, description: desc, date: date + ':00', location });
+    await api('/api/events/create', 'POST', {
+      title: title,
+      description: desc || 'No description provided.',
+      date: formattedDate,
+      location: location
+    });
     closeModal('createModal');
-    toast('Event created! 🌿', 'success');
+    toast('Event created successfully! 🌿', 'success');
     loadAdminEvents();
     loadAllEvents();
-    ['evTitle', 'evDesc', 'evDate', 'evLocation'].forEach(id => document.getElementById(id).value = '');
-  } catch (e) {
-    toast(e.message, 'error');
+    loadHomeEvents();
+    // Clear form
+    ['evTitle','evDesc','evDate','evLocation'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+  } catch(e) {
+    console.error('Create event error:', e);
+    toast('Error: ' + e.message, 'error');
   }
 }
 
@@ -972,6 +993,76 @@ async function updateStatus(id, status, btn) {
     toast(`Application ${status.toLowerCase()}! ✅`,'success');
     loadAdminApps();
   } catch(e) { btn.disabled=false; toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════
+// 🌱 SEED SAMPLE EVENTS
+// ══════════════════════════════════════
+async function seedSampleEvents() {
+  if (!confirm("This will create 6 sample events. Continue?")) return;
+
+  const sampleEvents = [
+    {
+      title: "Beach Cleanup Drive",
+      description: "Help us clean the local beach and protect marine life. Bring gloves and enthusiasm!",
+      date: "2027-09-15T09:00:00",
+      location: "Marina Beach, Chennai"
+    },
+    {
+      title: "Tree Plantation Campaign",
+      description: "Join hands to plant 1000 trees in the city park. Together we can make our city greener!",
+      date: "2027-10-05T07:00:00",
+      location: "Cubbon Park, Bangalore"
+    },
+    {
+      title: "Blood Donation Camp",
+      description: "Donate blood and save lives. Medical staff will be present. Every drop counts!",
+      date: "2027-08-20T10:00:00",
+      location: "City Hospital, Mumbai"
+    },
+    {
+      title: "Food Distribution Drive",
+      description: "Help distribute food to underprivileged communities. Bring compassion and kindness!",
+      date: "2027-09-01T08:00:00",
+      location: "Gandhi Nagar, Delhi"
+    },
+    {
+      title: "Education Awareness Camp",
+      description: "Teach underprivileged children basic reading and writing skills. Change a life today!",
+      date: "2027-10-20T10:00:00",
+      location: "Government School, Hyderabad"
+    },
+    {
+      title: "Old Age Home Visit",
+      description: "Spend quality time with elderly residents. Bring joy, stories and warm smiles!",
+      date: "2027-11-05T11:00:00",
+      location: "Sunshine Old Age Home, Pune"
+    }
+  ];
+
+  let created = 0;
+  let failed = 0;
+
+  toast("Creating sample events... Please wait ⏳", "info");
+
+  for (const event of sampleEvents) {
+    try {
+      await api("/api/events/create", "POST", event);
+      created++;
+    } catch(e) {
+      failed++;
+    }
+  }
+
+  if (created > 0) {
+    toast(`✅ ${created} sample events created successfully!`, "success");
+    loadAdminEvents();
+    loadAllEvents();
+    loadHomeEvents();
+  }
+  if (failed > 0) {
+    toast(`⚠️ ${failed} events already exist or failed`, "info");
+  }
 }
 
 // ── INIT ──
