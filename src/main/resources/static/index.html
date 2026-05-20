@@ -372,7 +372,7 @@
     <div class="form-group"><label>Location *</label><input type="text" id="evLocation" placeholder="Marina Beach, Chennai"/></div>
     <div class="modal-actions">
       <button class="btn" style="background:#f0f0f0;color:var(--dark);" onclick="closeModal('createModal')">Cancel</button>
-      <button class="btn btn-green" onclick="submitCreateEvent()">Create Event</button>
+      <button class="btn btn-green" onclick="createEvent()">Create Event</button>
     </div>
   </div>
 </div>
@@ -935,7 +935,7 @@ async function applyEvent(eventId, btn) {
 function openCreateModal() { document.getElementById('createModal').classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-async function submitCreateEvent() {
+async function createEvent() {
   const title    = document.getElementById('evTitle').value.trim();
   const desc     = document.getElementById('evDesc').value.trim();
   const dateVal  = document.getElementById('evDate').value;
