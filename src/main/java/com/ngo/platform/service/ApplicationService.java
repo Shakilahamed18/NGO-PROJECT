@@ -5,6 +5,7 @@ import com.ngo.platform.dto.StatusUpdateRequest;
 import com.ngo.platform.exception.DuplicateResourceException;
 import com.ngo.platform.exception.ResourceNotFoundException;
 import com.ngo.platform.model.Application;
+import com.ngo.platform.model.ApplicationStatus;
 import com.ngo.platform.model.Event;
 import com.ngo.platform.model.User;
 import com.ngo.platform.repository.ApplicationRepository;
@@ -13,6 +14,7 @@ import com.ngo.platform.repository.UserRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,8 +26,8 @@ public class ApplicationService {
     private final EventRepository eventRepository;
 
     public ApplicationService(ApplicationRepository applicationRepository,
-                               UserRepository userRepository,
-                               EventRepository eventRepository) {
+                              UserRepository userRepository,
+                              EventRepository eventRepository) {
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
@@ -62,20 +64,27 @@ public class ApplicationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found"));
 
         return applicationRepository.findByUserId(user.getId())
-                .stream().map(this::mapToResponse).collect(Collectors.toList());
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     public List<ApplicationResponse> getAllApplications() {
         return applicationRepository.findAll()
-                .stream().map(this::mapToResponse).collect(Collectors.toList());
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     public List<ApplicationResponse> getApplicationsForEvent(Long eventId) {
         if (!eventRepository.existsById(eventId)) {
             throw new ResourceNotFoundException("Event not found with id: " + eventId);
         }
+
         return applicationRepository.findByEventId(eventId)
-                .stream().map(this::mapToResponse).collect(Collectors.toList());
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     public ApplicationResponse updateApplicationStatus(Long applicationId, StatusUpdateRequest request) {
@@ -83,7 +92,14 @@ public class ApplicationService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Application not found with id: " + applicationId));
 
-        application.setStatus(request.getStatus());
+        ApplicationStatus newStatus = request.getStatus();
+
+        if (newStatus == ApplicationStatus.COMPLETED
+                && application.getEvent().getDate().isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Event cannot be marked COMPLETED before the event date");
+        }
+
+        application.setStatus(newStatus);
         Application updated = applicationRepository.save(application);
         return mapToResponse(updated);
     }
@@ -96,6 +112,7 @@ public class ApplicationService {
                 .userEmail(app.getUser().getEmail())
                 .eventId(app.getEvent().getId())
                 .eventTitle(app.getEvent().getTitle())
+                .eventDate(app.getEvent().getDate())
                 .status(app.getStatus().name())
                 .build();
     }

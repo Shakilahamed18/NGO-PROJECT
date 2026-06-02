@@ -137,6 +137,7 @@
     .status.PENDING{background:#fff3cd;color:#856404;}
     .status.APPROVED{background:#d1e7dd;color:#0a3622;}
     .status.REJECTED{background:#f8d7da;color:#842029;}
+    .status.COMPLETED{background: #cfe2ff;color: #084298;}
 
     /* TABLE */
     .table-wrap{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;border:1px solid #f0f0f0;}
@@ -372,7 +373,7 @@
     <div class="form-group"><label>Location *</label><input type="text" id="evLocation" placeholder="Marina Beach, Chennai"/></div>
     <div class="modal-actions">
       <button class="btn" style="background:#f0f0f0;color:var(--dark);" onclick="closeModal('createModal')">Cancel</button>
-      <button class="btn btn-green" onclick="createEvent()">Create Event</button>
+      <button class="btn btn-green" onclick="handleCreateEvent()">Create Event</button>
     </div>
   </div>
 </div>
@@ -689,24 +690,26 @@ Date: ${document.getElementById('certDate').textContent}
 function loadCertificates() {
   const el = document.getElementById('certsList');
   api('/api/applications/my').then(apps => {
-    const approved = apps.filter(a => a.status === 'APPROVED');
-    if (!approved.length) {
-      el.innerHTML = `<div class="empty"><div class="empty-icon">🏆</div><h3>No certificates yet</h3><p>Get approved for events to earn certificates!</p></div>`;
+    const completed = apps.filter(a => a.status === 'COMPLETED');
+
+    if (!completed.length) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">🏆</div><h3>No certificates yet</h3><p>Complete an event to earn certificates!</p></div>`;
       return;
     }
-    el.innerHTML = approved.map(a => `
+
+    el.innerHTML = completed.map(a => `
       <div class="card" style="margin-bottom:16px;">
         <div class="card-top" style="display:flex;align-items:center;justify-content:space-between;">
           <div>
             <div class="card-icon">🏆</div>
             <div class="card-title">${a.eventTitle}</div>
-            <div class="card-date">Status: APPROVED ✅</div>
+            <div class="card-date">Status: COMPLETED ✅</div>
           </div>
         </div>
         <div class="card-body">
           <div class="card-actions">
             <button class="btn btn-green" style="padding:8px 16px;font-size:13px;"
-              onclick="showCertificate(${a.id},'${a.eventTitle}','${new Date().toISOString()}')">
+              onclick="showCertificate(${a.id},'${a.eventTitle}','${a.eventDate || ''}')">
               🏆 View Certificate
             </button>
             <button class="btn btn-accent" style="padding:8px 16px;font-size:13px;"
@@ -721,7 +724,6 @@ function loadCertificates() {
     el.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>${e.message}</h3></div>`;
   });
 }
-
 // ══════════════════════════════════════
 // LOAD EVENTS
 // ══════════════════════════════════════
@@ -795,12 +797,12 @@ async function loadMyApplications() {
                 <td><strong>${a.eventTitle}</strong></td>
                 <td><span class="status ${a.status}">${a.status}</span></td>
                 <td style="display:flex;gap:6px;flex-wrap:wrap;">
-                  ${a.status==='APPROVED' ? `
-                    <button class="btn" style="background:#d1e7dd;color:#0a3622;padding:6px 10px;font-size:12px;"
-                      onclick="showCertificate(${a.id},'${a.eventTitle}','')">🏆 Certificate</button>
-                    <button class="btn" style="background:#fff3cd;color:#856404;padding:6px 10px;font-size:12px;"
-                      onclick="openRateModal(${a.eventId},'${a.eventTitle}')">⭐ Rate</button>
-                  ` : '—'}
+                  ${a.status==='COMPLETED' ? `
+  <button class="btn" style="background:#d1e7dd;color:#0a3622;padding:6px 10px;font-size:12px;"
+    onclick="showCertificate(${a.id},'${a.eventTitle}','${a.eventDate || ''}')">🏆 Certificate</button>
+  <button class="btn" style="background:#fff3cd;color:#856404;padding:6px 10px;font-size:12px;"
+    onclick="openRateModal(${a.eventId},'${a.eventTitle}')">⭐ Rate</button>
+` : '—'}
                 </td>
               </tr>
             `).join('')}
@@ -844,28 +846,47 @@ async function loadAdminEvents() {
 async function loadAdminApps() {
   const el = document.getElementById('adminAppsBody');
   el.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;"><div class="spinner" style="margin:auto;"></div></td></tr>`;
+
   try {
     const apps = await api('/api/applications/all');
+
     document.getElementById('adminAppCount').textContent = apps.length;
-    document.getElementById('adminPendingCount').textContent = apps.filter(a=>a.status==='PENDING').length;
-    document.getElementById('adminApprovedCount').textContent = apps.filter(a=>a.status==='APPROVED').length;
-    if (!apps.length) { el.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--gray);">No applications yet.</td></tr>`; return; }
-    el.innerHTML = apps.map(a=>`
+    document.getElementById('adminPendingCount').textContent = apps.filter(a => a.status === 'PENDING').length;
+    document.getElementById('adminApprovedCount').textContent = apps.filter(a => a.status === 'APPROVED').length;
+
+    if (!apps.length) {
+      el.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--gray);">No applications yet.</td></tr>`;
+      return;
+    }
+
+    el.innerHTML = apps.map(a => `
       <tr>
         <td>#${a.id}</td>
         <td>👤 ${a.userName}<br/><small style="color:var(--gray)">${a.userEmail}</small></td>
         <td>${a.eventTitle}</td>
         <td><span class="status ${a.status}">${a.status}</span></td>
         <td style="display:flex;gap:6px;flex-wrap:wrap;">
-          ${a.status!=='APPROVED'?`<button class="btn" style="background:#d1e7dd;color:#0a3622;padding:6px 10px;font-size:12px;" onclick="updateStatus(${a.id},'APPROVED',this)">✅ Approve</button>`:''}
-          ${a.status!=='REJECTED'?`<button class="btn" style="background:#f8d7da;color:#842029;padding:6px 10px;font-size:12px;" onclick="updateStatus(${a.id},'REJECTED',this)">❌ Reject</button>`:''}
+          ${a.status !== 'APPROVED' ? `
+            <button class="btn" style="background:#d1e7dd;color:#0a3622;padding:6px 10px;font-size:12px;"
+              onclick="updateStatus(${a.id},'APPROVED',this)">✅ Approve</button>
+          ` : ''}
+
+          ${a.status === 'APPROVED' ? `
+            <button class="btn" style="background:#cfe2ff;color:#084298;padding:6px 10px;font-size:12px;"
+              onclick="updateStatus(${a.id},'COMPLETED',this)">🏁 Complete</button>
+          ` : ''}
+
+          ${a.status !== 'REJECTED' ? `
+            <button class="btn" style="background:#f8d7da;color:#842029;padding:6px 10px;font-size:12px;"
+              onclick="updateStatus(${a.id},'REJECTED',this)">❌ Reject</button>
+          ` : ''}
         </td>
-      </tr>`).join('');
-  } catch(e) {
+      </tr>
+    `).join('');
+  } catch (e) {
     el.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--danger);">${e.message}</td></tr>`;
   }
 }
-
 // ══════════════════════════════════════
 // AUTH
 // ══════════════════════════════════════
@@ -935,40 +956,36 @@ async function applyEvent(eventId, btn) {
 function openCreateModal() { document.getElementById('createModal').classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-async function createEvent() {
-  const title    = document.getElementById('evTitle').value.trim();
-  const desc     = document.getElementById('evDesc').value.trim();
-  const dateVal  = document.getElementById('evDate').value;
+async function handleCreateEvent() {
+  console.log("CREATE BUTTON CLICKED");
+  const title = document.getElementById('evTitle').value.trim();
+  const desc = document.getElementById('evDesc').value.trim();
+  const dateVal = document.getElementById('evDate').value;
   const location = document.getElementById('evLocation').value.trim();
 
-  // Validate required fields
-  if (!title)    return toast('Please enter event title!', 'error');
-  if (!dateVal)  return toast('Please select event date!', 'error');
+  if (!title) return toast('Please enter event title!', 'error');
+  if (!dateVal) return toast('Please select event date!', 'error');
   if (!location) return toast('Please enter event location!', 'error');
 
-  // Format date correctly for backend: "2027-09-15T09:00:00"
   let formattedDate = dateVal;
   if (dateVal.length === 16) {
-    formattedDate = dateVal + ':00'; // add seconds if missing
+    formattedDate = dateVal + ':00';
   }
 
   try {
     await api('/api/events/create', 'POST', {
-      title: title,
+      title,
       description: desc || 'No description provided.',
       date: formattedDate,
-      location: location
+      location
     });
+
     closeModal('createModal');
     toast('Event created successfully! 🌿', 'success');
     loadAdminEvents();
     loadAllEvents();
-    loadHomeEvents();
-    // Clear form
-    ['evTitle','evDesc','evDate','evLocation'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-  } catch(e) {
+    showPage('admin');
+  } catch (e) {
     console.error('Create event error:', e);
     toast('Error: ' + e.message, 'error');
   }
