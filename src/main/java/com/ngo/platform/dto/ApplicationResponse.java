@@ -11,11 +11,13 @@ public class ApplicationResponse {
     private String eventTitle;
     private LocalDateTime eventDate;
     private String status;
+    private String qrToken;
 
     public ApplicationResponse() {}
 
     public ApplicationResponse(Long id, Long userId, String userName, String userEmail,
-                               Long eventId, String eventTitle, LocalDateTime eventDate, String status) {
+                               Long eventId, String eventTitle, LocalDateTime eventDate,
+                               String status, String qrToken) {
         this.id = id;
         this.userId = userId;
         this.userName = userName;
@@ -24,6 +26,7 @@ public class ApplicationResponse {
         this.eventTitle = eventTitle;
         this.eventDate = eventDate;
         this.status = status;
+        this.qrToken = qrToken;
     }
 
     public Long getId() { return id; }
@@ -34,6 +37,7 @@ public class ApplicationResponse {
     public String getEventTitle() { return eventTitle; }
     public LocalDateTime getEventDate() { return eventDate; }
     public String getStatus() { return status; }
+    public String getQrToken() { return qrToken; }
 
     public void setId(Long id) { this.id = id; }
     public void setUserId(Long userId) { this.userId = userId; }
@@ -43,6 +47,7 @@ public class ApplicationResponse {
     public void setEventTitle(String eventTitle) { this.eventTitle = eventTitle; }
     public void setEventDate(LocalDateTime eventDate) { this.eventDate = eventDate; }
     public void setStatus(String status) { this.status = status; }
+    public void setQrToken(String qrToken) { this.qrToken = qrToken; }
 
     public static Builder builder() { return new Builder(); }
 
@@ -55,6 +60,7 @@ public class ApplicationResponse {
         private String eventTitle;
         private LocalDateTime eventDate;
         private String status;
+        private String qrToken;
 
         public Builder id(Long id) { this.id = id; return this; }
         public Builder userId(Long userId) { this.userId = userId; return this; }
@@ -64,9 +70,10 @@ public class ApplicationResponse {
         public Builder eventTitle(String eventTitle) { this.eventTitle = eventTitle; return this; }
         public Builder eventDate(LocalDateTime eventDate) { this.eventDate = eventDate; return this; }
         public Builder status(String status) { this.status = status; return this; }
+        public Builder qrToken(String qrToken) { this.qrToken = qrToken; return this; }
 
         public ApplicationResponse build() {
-            return new ApplicationResponse(id, userId, userName, userEmail, eventId, eventTitle, eventDate, status);
+            return new ApplicationResponse(id, userId, userName, userEmail, eventId, eventTitle, eventDate, status, qrToken);
         }
     }
 }

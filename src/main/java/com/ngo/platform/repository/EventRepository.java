@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
@@ -24,6 +26,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     // Search by title AND location
     List<Event> findByTitleContainingIgnoreCaseAndLocationContainingIgnoreCase(
             String title, String location);
+
+             Optional<Event> findByQrToken(String qrToken);
 
     // Combined search — title, location, date
     @Query("SELECT e FROM Event e WHERE " +

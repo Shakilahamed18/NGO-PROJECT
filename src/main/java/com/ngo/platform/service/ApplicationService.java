@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,34 +35,43 @@ public class ApplicationService {
     }
 
     public ApplicationResponse applyToEvent(Long eventId) {
+
         String currentUserEmail = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
+                .getAuthentication()
+                .getName();
 
         User user = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found"));
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Event not found with id: " + eventId));
 
         if (applicationRepository.existsByUserIdAndEventId(user.getId(), eventId)) {
-            throw new DuplicateResourceException("You have already applied to this event");
+            throw new DuplicateResourceException(
+                    "You have already applied to this event");
         }
 
         Application application = Application.builder()
                 .user(user)
                 .event(event)
+                .status(ApplicationStatus.PENDING)
                 .build();
 
         Application saved = applicationRepository.save(application);
+
         return mapToResponse(saved);
     }
 
     public List<ApplicationResponse> getMyApplications() {
+
         String currentUserEmail = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
+                .getAuthentication()
+                .getName();
 
         User user = userRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Authenticated user not found"));
 
         return applicationRepository.findByUserId(user.getId())
                 .stream()
@@ -70,6 +80,7 @@ public class ApplicationService {
     }
 
     public List<ApplicationResponse> getAllApplications() {
+
         return applicationRepository.findAll()
                 .stream()
                 .map(this::mapToResponse)
@@ -77,8 +88,10 @@ public class ApplicationService {
     }
 
     public List<ApplicationResponse> getApplicationsForEvent(Long eventId) {
+
         if (!eventRepository.existsById(eventId)) {
-            throw new ResourceNotFoundException("Event not found with id: " + eventId);
+            throw new ResourceNotFoundException(
+                    "Event not found with id: " + eventId);
         }
 
         return applicationRepository.findByEventId(eventId)
@@ -87,7 +100,10 @@ public class ApplicationService {
                 .collect(Collectors.toList());
     }
 
-    public ApplicationResponse updateApplicationStatus(Long applicationId, StatusUpdateRequest request) {
+    public ApplicationResponse updateApplicationStatus(
+            Long applicationId,
+            StatusUpdateRequest request) {
+
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Application not found with id: " + applicationId));
@@ -96,15 +112,30 @@ public class ApplicationService {
 
         if (newStatus == ApplicationStatus.COMPLETED
                 && application.getEvent().getDate().isAfter(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Event cannot be marked COMPLETED before the event date");
+
+            throw new IllegalArgumentException(
+                    "Event cannot be marked COMPLETED before the event date");
         }
 
         application.setStatus(newStatus);
+
+        // Generate QR Token when application is approved
+        if (newStatus == ApplicationStatus.APPROVED) {
+
+            if (application.getQrToken() == null
+                    || application.getQrToken().isBlank()) {
+
+                application.setQrToken(UUID.randomUUID().toString());
+            }
+        }
+
         Application updated = applicationRepository.save(application);
+
         return mapToResponse(updated);
     }
 
     private ApplicationResponse mapToResponse(Application app) {
+
         return ApplicationResponse.builder()
                 .id(app.getId())
                 .userId(app.getUser().getId())
@@ -114,6 +145,7 @@ public class ApplicationService {
                 .eventTitle(app.getEvent().getTitle())
                 .eventDate(app.getEvent().getDate())
                 .status(app.getStatus().name())
+                .qrToken(app.getQrToken())
                 .build();
     }
 }

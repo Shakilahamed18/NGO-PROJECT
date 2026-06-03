@@ -37,20 +37,33 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
+                // Swagger
+                .requestMatchers(
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/v3/api-docs/**",
+                    "/webjars/**"
+                ).permitAll()
+
                 // Frontend static files
                 .requestMatchers("/", "/index.html", "/*.html", "/*.css", "/*.js").permitAll()
+
                 // Auth endpoints
                 .requestMatchers("/api/auth/**").permitAll()
-                // Public event endpoints
-                .requestMatchers("/api/events").permitAll()
-                .requestMatchers("/api/events/search").permitAll()
-                .requestMatchers("/api/events/{id}").permitAll()
+
                 // Admin only
                 .requestMatchers("/api/events/create").hasRole("ADMIN")
                 .requestMatchers("/api/events/delete/**").hasRole("ADMIN")
                 .requestMatchers("/api/applications/all").hasRole("ADMIN")
                 .requestMatchers("/api/applications/event/**").hasRole("ADMIN")
                 .requestMatchers("/api/applications/*/status").hasRole("ADMIN")
+
+                // Public event endpoints
+                .requestMatchers("/api/events").permitAll()
+                .requestMatchers("/api/events/search").permitAll()
+                .requestMatchers("/api/events/*").permitAll()
+                .requestMatchers("/api/events/*/qr").permitAll()
+
                 // Everything else needs login
                 .anyRequest().authenticated()
             )

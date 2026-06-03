@@ -3,9 +3,12 @@ package com.ngo.platform.controller;
 import com.ngo.platform.dto.EventRequest;
 import com.ngo.platform.dto.EventResponse;
 import com.ngo.platform.service.EventService;
+import com.ngo.platform.service.QRCodeService;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,41 +20,34 @@ import java.util.List;
 public class EventController {
 
     private final EventService eventService;
+    private final QRCodeService qrCodeService;
 
-    public EventController(EventService eventService) {
+    public EventController(EventService eventService, QRCodeService qrCodeService) {
         this.eventService = eventService;
+        this.qrCodeService = qrCodeService;
     }
 
-    // Create event — ADMIN only
     @PostMapping("/create")
     public ResponseEntity<EventResponse> createEvent(@Valid @RequestBody EventRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(eventService.createEvent(request));
     }
 
-    // Get all events
     @GetMapping
     public ResponseEntity<List<EventResponse>> getAllEvents() {
         return ResponseEntity.ok(eventService.getAllEvents());
     }
 
-    // Get event by ID
     @GetMapping("/{id}")
     public ResponseEntity<EventResponse> getEventById(@PathVariable Long id) {
         return ResponseEntity.ok(eventService.getEventById(id));
     }
 
-    // Delete event — ADMIN only
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteEvent(@PathVariable Long id) {
         eventService.deleteEvent(id);
         return ResponseEntity.ok("Event deleted successfully");
     }
 
-    /**
-     * Search events by title, location, date
-     * Example: GET /api/events/search?title=beach&location=chennai&date=2025-08-01T00:00:00
-     * All parameters are optional
-     */
     @GetMapping("/search")
     public ResponseEntity<List<EventResponse>> searchEvents(
             @RequestParam(required = false) String title,
@@ -59,5 +55,20 @@ public class EventController {
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date) {
         return ResponseEntity.ok(eventService.searchEvents(title, location, date));
+    }
+
+    @GetMapping(value = "/{id}/qr", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getEventQrCode(@PathVariable Long id) {
+        EventResponse event = eventService.getEventById(id);
+
+        String baseUrl = "http://YOUR-PC-IP:8080";   // replace with your real IP or domain
+        String qrText = baseUrl + "/attendance.html?token=" + event.getQrToken();
+
+        byte[] qrImage = qrCodeService.generateQrCode(qrText, 300, 300);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=event-" + id + "-qr.png")
+                .contentType(MediaType.IMAGE_PNG)
+                .body(qrImage);
     }
 }

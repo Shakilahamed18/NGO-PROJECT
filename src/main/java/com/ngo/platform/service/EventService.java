@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,12 +22,16 @@ public class EventService {
     }
 
     public EventResponse createEvent(EventRequest request) {
+        String qrToken = UUID.randomUUID().toString();
+
         Event event = Event.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .date(request.getDate())
                 .location(request.getLocation())
+                .qrToken(qrToken)
                 .build();
+
         Event saved = eventRepository.save(event);
         return mapToResponse(saved);
     }
@@ -52,10 +57,6 @@ public class EventService {
         eventRepository.deleteById(id);
     }
 
-    /**
-     * Search events by title, location, and date filter.
-     * Any parameter can be null — means no filter on that field.
-     */
     public List<EventResponse> searchEvents(String title, String location, LocalDateTime date) {
         return eventRepository.searchEvents(title, location, date)
                 .stream()
@@ -70,6 +71,7 @@ public class EventService {
                 .description(event.getDescription())
                 .date(event.getDate())
                 .location(event.getLocation())
+                .qrToken(event.getQrToken())
                 .build();
     }
 }

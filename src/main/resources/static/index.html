@@ -824,10 +824,16 @@ async function loadAdminEvents() {
   try {
     const events = await api('/api/events');
     document.getElementById('adminEventCount').textContent = events.length;
-    if (!events.length) { el.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--gray);">No events yet.</td></tr>`; return; }
+
+    if (!events.length) {
+      el.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--gray);">No events yet.</td></tr>`;
+      return;
+    }
+
     el.innerHTML = events.map(ev => {
       const avg = getAvgRating(ev.id);
       const stars = avg > 0 ? `${'★'.repeat(Math.round(avg))} ${avg.toFixed(1)}` : '—';
+
       return `
         <tr>
           <td>#${ev.id}</td>
@@ -835,14 +841,31 @@ async function loadAdminEvents() {
           <td>${fmtDate(ev.date)}</td>
           <td>📍 ${ev.location}</td>
           <td style="color:#f4a261;">${stars}</td>
-          <td><button class="btn btn-danger" style="padding:6px 12px;font-size:12px;" onclick="deleteEvent(${ev.id})">🗑 Delete</button></td>
+          <td>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <a href="/api/events/${ev.id}/qr" target="_blank" title="Open QR code">
+                <img
+                  src="/api/events/${ev.id}/qr"
+                  alt="QR Code"
+                  width="80"
+                  height="80"
+                  style="border:1px solid #ddd;border-radius:8px;padding:4px;background:#fff;object-fit:contain;">
+              </a>
+
+              <button class="btn btn-danger"
+                      style="padding:6px 12px;font-size:12px;"
+                      onclick="deleteEvent(${ev.id})">
+                🗑 Delete
+              </button>
+            </div>
+          </td>
         </tr>`;
     }).join('');
-  } catch(e) {
+
+  } catch (e) {
     el.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--danger);">${e.message}</td></tr>`;
   }
 }
-
 async function loadAdminApps() {
   const el = document.getElementById('adminAppsBody');
   el.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;"><div class="spinner" style="margin:auto;"></div></td></tr>`;
