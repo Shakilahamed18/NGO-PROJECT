@@ -191,6 +191,7 @@
     }
   </style>
 </head>
+  
 <body>
 
 <div id="toast"></div>
@@ -313,6 +314,11 @@
       <button class="tab" onclick="switchTab('browseEvents',this)">🌿 Browse Events</button>
       <button class="tab" onclick="switchTab('myCerts',this)">🏆 Certificates</button>
     </div>
+      <div id="qrScannerSection">
+    <h3>📷 Scan Event QR</h3>
+    <button class="btn btn-green" onclick="startQrScanner()"> 📷 Scan QR </button>
+    <div id="qr-reader" style="width:300px"></div>
+</div>
     <div id="myApps"><div id="myAppsList"><div class="loading"><div class="spinner"></div>Loading...</div></div></div>
     <div id="browseEvents" style="display:none;">
       <div class="cards-grid" id="dashEventsList"><div class="loading"><div class="spinner"></div>Loading...</div></div>
@@ -420,6 +426,32 @@
   </div>
 </div>
 
+<!-- QR Modal -->
+<div class="modal-overlay" id="qrModal">
+    <div class="modal" style="max-width:420px;text-align:center;">
+
+        <h3>Event QR Code</h3>
+
+        <img id="qrImage"
+             width="280"
+             style="border:8px solid #eee;border-radius:10px;">
+
+        <br><br>
+
+        <button class="btn btn-green"
+                onclick="downloadQr()">
+            Download QR
+        </button>
+
+        <button class="btn"
+                style="background:#ddd;"
+                onclick="closeModal('qrModal')">
+            Close
+        </button>
+
+    </div>
+</div>
+
 <footer><strong>VolunteerHub</strong> — NGO Volunteering Platform &nbsp;|&nbsp; Spring Boot + MySQL &nbsp;|&nbsp; Built with ❤️</footer>
 
 <script>
@@ -446,16 +478,69 @@ function toast(msg, type='info') {
 // ── API ──
 async function api(path, method='GET', body=null, auth=true) {
   const headers = {'Content-Type':'application/json'};
-  if (auth && token) headers['Authorization'] = 'Bearer ' + token;
-  const opts = {method, headers};
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(API + path, opts);
+
+  if (auth && token) {
+    headers['Authorization'] = 'Bearer ' + token;
+  }
+
+  const res = await fetch(API + path, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : null
+  });
+
+  if (res.status === 401) {
+    localStorage.clear();
+    alert("Session expired. Please login again.");
+    location.reload();
+    return;
+  }
+
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || 'Request failed');
+
+  if (!res.ok) {
+    throw new Error(data.message || 'Request failed');
+  }
+
   return data;
 }
 
 // ── NAV ──
+
+function startQrScanner() {
+
+    const html5QrCode = new Html5Qrcode("qr-reader");
+    
+
+    html5QrCode.start(
+        { facingMode: "environment" },
+        {
+            fps: 10,
+            qrbox: 250
+        },
+        async (decodedText) => {
+
+            try {
+
+                await api(
+                    `/api/attendance/checkin/${decodedText}`,
+                    'POST'
+                );
+
+                toast('Attendance marked successfully ✅', 'success');
+
+                html5QrCode.stop();
+
+            } catch (e) {
+                toast(e.message, 'error');
+            }
+
+        }
+    );
+}
+
+
+
 function updateNav() {
   const nav = document.getElementById('navLinks');
   if (token) {
@@ -821,49 +906,50 @@ function loadAdminDashboard() { loadAdminEvents(); }
 
 async function loadAdminEvents() {
   const el = document.getElementById('adminEventsBody');
+
   try {
-    const events = await api('/api/events');
+    console.log("Loading admin events...");
+
+    const events = await api('/api/events', 'GET', null, false);
+
+    console.log("Events received:", events);
+
     document.getElementById('adminEventCount').textContent = events.length;
 
     if (!events.length) {
-      el.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--gray);">No events yet.</td></tr>`;
+      el.innerHTML =
+        `<tr><td colspan="6" style="text-align:center;">No events found</td></tr>`;
       return;
     }
 
-    el.innerHTML = events.map(ev => {
-      const avg = getAvgRating(ev.id);
-      const stars = avg > 0 ? `${'★'.repeat(Math.round(avg))} ${avg.toFixed(1)}` : '—';
-
-      return `
-        <tr>
-          <td>#${ev.id}</td>
-          <td><strong>${ev.title}</strong></td>
-          <td>${fmtDate(ev.date)}</td>
-          <td>📍 ${ev.location}</td>
-          <td style="color:#f4a261;">${stars}</td>
+    el.innerHTML = events.map(ev => `
+      <tr>
+        <td>${ev.id}</td>
+        <td>${ev.title}</td>
+        <td>${fmtDate(ev.date)}</td>
+        <td>${ev.location}</td>
+        <td>—</td>
+        <td>
           <td>
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-              <a href="/api/events/${ev.id}/qr" target="_blank" title="Open QR code">
-                <img
-                  src="/api/events/${ev.id}/qr"
-                  alt="QR Code"
-                  width="80"
-                  height="80"
-                  style="border:1px solid #ddd;border-radius:8px;padding:4px;background:#fff;object-fit:contain;">
-              </a>
+    <button class="btn btn-green"
+        onclick="viewQr(${ev.id})">
+        📷 View QR
+    </button>
 
-              <button class="btn btn-danger"
-                      style="padding:6px 12px;font-size:12px;"
-                      onclick="deleteEvent(${ev.id})">
-                🗑 Delete
-              </button>
-            </div>
-          </td>
-        </tr>`;
-    }).join('');
+    <button class="btn btn-danger"
+        onclick="deleteEvent(${ev.id})">
+        🗑 Delete
+    </button>
+</td>
+        </td>
+      </tr>
+    `).join('');
 
   } catch (e) {
-    el.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--danger);">${e.message}</td></tr>`;
+    console.error("loadAdminEvents ERROR:", e);
+
+    el.innerHTML =
+      `<tr><td colspan="6" style="color:red">${e.message}</td></tr>`;
   }
 }
 async function loadAdminApps() {
@@ -1086,11 +1172,14 @@ async function seedSampleEvents() {
   toast("Creating sample events... Please wait ⏳", "info");
 
   for (const event of sampleEvents) {
-    try {
-      await api("/api/events/create", "POST", event);
-      created++;
-    } catch(e) {
-      failed++;
+  try {
+    const result = await api("/api/events/create", "POST", event);
+    console.log("SUCCESS:", result);
+    created++;
+  } catch(e) {
+    console.error("FAILED:", event.title, e);
+    failed++;
+
     }
   }
 
@@ -1101,13 +1190,39 @@ async function seedSampleEvents() {
     loadHomeEvents();
   }
   if (failed > 0) {
-    toast(`⚠️ ${failed} events already exist or failed`, "info");
+      console.log("Failed Count =", failed);
+      toast(`⚠️ ${failed} events failed`, "warning");
+
   }
+}
+
+function viewQr(eventId){
+
+    document.getElementById("qrImage").src =
+        `/api/events/${eventId}/qr`;
+
+    document.getElementById("qrModal")
+        .classList.add("open");
+}
+
+function downloadQr(){
+
+    const img=document.getElementById("qrImage");
+
+    const a=document.createElement("a");
+
+    a.href=img.src;
+
+    a.download="event-qr.png";
+
+    a.click();
 }
 
 // ── INIT ──
 updateNav();
 loadHomeEvents();
+
+
 </script>
 </body>
 </html>

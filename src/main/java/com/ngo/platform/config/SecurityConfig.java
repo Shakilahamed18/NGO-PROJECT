@@ -26,61 +26,78 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
-                          UserDetailsService userDetailsService) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthFilter,
+            UserDetailsService userDetailsService) {
+
         this.jwtAuthFilter = jwtAuthFilter;
         this.userDetailsService = userDetailsService;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                // Swagger
-                .requestMatchers(
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/v3/api-docs/**",
-                    "/webjars/**"
-                ).permitAll()
+                .csrf(AbstractHttpConfigurer::disable)
 
-                // Frontend static files
-                .requestMatchers("/", "/index.html", "/*.html", "/*.css", "/*.js").permitAll()
+                .authorizeHttpRequests(auth -> auth
 
-                // Auth endpoints
-                .requestMatchers("/api/auth/**").permitAll()
+                        // Swagger
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/webjars/**"
+                        ).permitAll()
 
-                // Admin only
-                .requestMatchers("/api/events/create").hasRole("ADMIN")
-                .requestMatchers("/api/events/delete/**").hasRole("ADMIN")
-                .requestMatchers("/api/applications/all").hasRole("ADMIN")
-                .requestMatchers("/api/applications/event/**").hasRole("ADMIN")
-                .requestMatchers("/api/applications/*/status").hasRole("ADMIN")
+                        // Static files
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/*.html",
+                                "/*.css",
+                                "/*.js"
+                        ).permitAll()
 
-                // Public event endpoints
-                .requestMatchers("/api/events").permitAll()
-                .requestMatchers("/api/events/search").permitAll()
-                .requestMatchers("/api/events/*").permitAll()
-                .requestMatchers("/api/events/*/qr").permitAll()
+                        // Authentication
+                        .requestMatchers("/api/auth/**").permitAll()
 
-                // Everything else needs login
-                .anyRequest().authenticated()
-            )
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                        // Events
+                        .requestMatchers("/api/events/**").permitAll()
+
+                        // Applications
+                        .requestMatchers("/api/applications/**").permitAll()
+
+                        // Attendance
+                        .requestMatchers("/api/attendance/**").permitAll()
+
+                        // Everything else
+                        .anyRequest().permitAll()
+                )
+
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                .authenticationProvider(authenticationProvider())
+
+                .addFilterBefore(
+                        jwtAuthFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+
+        DaoAuthenticationProvider provider =
+                new DaoAuthenticationProvider();
+
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
+
         return provider;
     }
 
@@ -90,8 +107,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
-            throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config
+    ) throws Exception {
         return config.getAuthenticationManager();
     }
 }

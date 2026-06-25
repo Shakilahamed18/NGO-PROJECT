@@ -31,8 +31,6 @@ public class Application {
 
     private LocalDateTime attendedAt;
 
-    @Column(unique = true)
-    private String qrToken;
 
     private String certificatePath;
 
@@ -47,14 +45,13 @@ public class Application {
     }
 
     public Application(Long id, User user, Event event, ApplicationStatus status,
-                       boolean attended, LocalDateTime attendedAt, String qrToken, String certificatePath) {
+                       boolean attended, LocalDateTime attendedAt, String certificatePath) {
         this.id = id;
         this.user = user;
         this.event = event;
         this.status = status;
         this.attended = attended;
         this.attendedAt = attendedAt;
-        this.qrToken = qrToken;
         this.certificatePath = certificatePath;
     }
 
@@ -64,7 +61,6 @@ public class Application {
     public ApplicationStatus getStatus() { return status; }
     public boolean isAttended() { return attended; }
     public LocalDateTime getAttendedAt() { return attendedAt; }
-    public String getQrToken() { return qrToken; }
     public String getCertificatePath() { return certificatePath; }
 
     public void setId(Long id) { this.id = id; }
@@ -73,7 +69,6 @@ public class Application {
     public void setStatus(ApplicationStatus status) { this.status = status; }
     public void setAttended(boolean attended) { this.attended = attended; }
     public void setAttendedAt(LocalDateTime attendedAt) { this.attendedAt = attendedAt; }
-    public void setQrToken(String qrToken) { this.qrToken = qrToken; }
     public void setCertificatePath(String certificatePath) { this.certificatePath = certificatePath; }
 
     public static Builder builder() { return new Builder(); }
@@ -85,7 +80,6 @@ public class Application {
         private ApplicationStatus status = ApplicationStatus.PENDING;
         private boolean attended = false;
         private LocalDateTime attendedAt;
-        private String qrToken;
         private String certificatePath;
 
         public Builder id(Long id) { this.id = id; return this; }
@@ -94,11 +88,10 @@ public class Application {
         public Builder status(ApplicationStatus status) { this.status = status; return this; }
         public Builder attended(boolean attended) { this.attended = attended; return this; }
         public Builder attendedAt(LocalDateTime attendedAt) { this.attendedAt = attendedAt; return this; }
-        public Builder qrToken(String qrToken) { this.qrToken = qrToken; return this; }
         public Builder certificatePath(String certificatePath) { this.certificatePath = certificatePath; return this; }
 
         public Application build() {
-            return new Application(id, user, event, status, attended, attendedAt, qrToken, certificatePath);
+            return new Application(id, user, event, status, attended, attendedAt, certificatePath);
         }
     }
 }

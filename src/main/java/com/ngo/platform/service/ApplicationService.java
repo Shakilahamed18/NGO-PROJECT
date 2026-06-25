@@ -15,7 +15,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,15 +40,15 @@ public class ApplicationService {
                 .getName();
 
         User user = userRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Authenticated user not found"));
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Event not found with id: " + eventId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Event not found with id: " + eventId));
 
         if (applicationRepository.existsByUserIdAndEventId(user.getId(), eventId)) {
-            throw new DuplicateResourceException(
-                    "You have already applied to this event");
+            throw new DuplicateResourceException("You have already applied to this event");
         }
 
         Application application = Application.builder()
@@ -70,8 +69,8 @@ public class ApplicationService {
                 .getName();
 
         User user = userRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Authenticated user not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Authenticated user not found"));
 
         return applicationRepository.findByUserId(user.getId())
                 .stream()
@@ -81,7 +80,7 @@ public class ApplicationService {
 
     public List<ApplicationResponse> getAllApplications() {
 
-        return applicationRepository.findAll()
+        return applicationRepository.findAllWithUserAndEvent()
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -90,8 +89,7 @@ public class ApplicationService {
     public List<ApplicationResponse> getApplicationsForEvent(Long eventId) {
 
         if (!eventRepository.existsById(eventId)) {
-            throw new ResourceNotFoundException(
-                    "Event not found with id: " + eventId);
+            throw new ResourceNotFoundException("Event not found with id: " + eventId);
         }
 
         return applicationRepository.findByEventId(eventId)
@@ -105,8 +103,8 @@ public class ApplicationService {
             StatusUpdateRequest request) {
 
         Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Application not found with id: " + applicationId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Application not found with id: " + applicationId));
 
         ApplicationStatus newStatus = request.getStatus();
 
@@ -119,16 +117,6 @@ public class ApplicationService {
 
         application.setStatus(newStatus);
 
-        // Generate QR Token when application is approved
-        if (newStatus == ApplicationStatus.APPROVED) {
-
-            if (application.getQrToken() == null
-                    || application.getQrToken().isBlank()) {
-
-                application.setQrToken(UUID.randomUUID().toString());
-            }
-        }
-
         Application updated = applicationRepository.save(application);
 
         return mapToResponse(updated);
@@ -138,14 +126,13 @@ public class ApplicationService {
 
         return ApplicationResponse.builder()
                 .id(app.getId())
-                .userId(app.getUser().getId())
-                .userName(app.getUser().getName())
-                .userEmail(app.getUser().getEmail())
-                .eventId(app.getEvent().getId())
-                .eventTitle(app.getEvent().getTitle())
-                .eventDate(app.getEvent().getDate())
-                .status(app.getStatus().name())
-                .qrToken(app.getQrToken())
+                .userId(app.getUser() != null ? app.getUser().getId() : null)
+                .userName(app.getUser() != null ? app.getUser().getName() : null)
+                .userEmail(app.getUser() != null ? app.getUser().getEmail() : null)
+                .eventId(app.getEvent() != null ? app.getEvent().getId() : null)
+                .eventTitle(app.getEvent() != null ? app.getEvent().getTitle() : null)
+                .eventDate(app.getEvent() != null ? app.getEvent().getDate() : null)
+                .status(app.getStatus() != null ? app.getStatus().name() : null)
                 .build();
     }
 }

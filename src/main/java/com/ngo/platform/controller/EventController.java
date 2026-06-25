@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -48,6 +49,11 @@ public class EventController {
         return ResponseEntity.ok("Event deleted successfully");
     }
 
+    @GetMapping("/whoami")
+public String whoami(Authentication authentication) {
+    return authentication.getName() + " -> " + authentication.getAuthorities();
+}
+
     @GetMapping("/search")
     public ResponseEntity<List<EventResponse>> searchEvents(
             @RequestParam(required = false) String title,
@@ -61,8 +67,8 @@ public class EventController {
     public ResponseEntity<byte[]> getEventQrCode(@PathVariable Long id) {
         EventResponse event = eventService.getEventById(id);
 
-        String baseUrl = "http://YOUR-PC-IP:8080";   // replace with your real IP or domain
-        String qrText = baseUrl + "/attendance.html?token=" + event.getQrToken();
+    
+        String qrText = event.getQrToken();
 
         byte[] qrImage = qrCodeService.generateQrCode(qrText, 300, 300);
 
