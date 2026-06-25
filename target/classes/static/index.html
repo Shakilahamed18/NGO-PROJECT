@@ -510,7 +510,6 @@ async function api(path, method='GET', body=null, auth=true) {
 function startQrScanner() {
 
     const html5QrCode = new Html5Qrcode("qr-reader");
-    
 
     html5QrCode.start(
         { facingMode: "environment" },
@@ -520,26 +519,34 @@ function startQrScanner() {
         },
         async (decodedText) => {
 
+            console.log("Scanned QR:", decodedText);
+            alert("Scanned QR: " + decodedText);
+
             try {
 
-                await api(
+                const response = await api(
                     `/api/attendance/checkin/${decodedText}`,
-                    'POST'
+                    "POST"
                 );
 
-                toast('Attendance marked successfully ✅', 'success');
+                console.log(response);
 
-                html5QrCode.stop();
+                toast("Attendance marked successfully ✅", "success");
+
+                await html5QrCode.stop();
 
             } catch (e) {
-                toast(e.message, 'error');
+
+                console.error(e);
+
+                alert(JSON.stringify(e));
+
+                toast(e.message || "Attendance failed", "error");
             }
 
         }
     );
 }
-
-
 
 function updateNav() {
   const nav = document.getElementById('navLinks');
