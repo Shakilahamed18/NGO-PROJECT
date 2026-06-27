@@ -114,35 +114,200 @@
 
 <!-- ══════════ USER DASHBOARD ══════════ -->
 <div id="page-dashboard" class="page">
-  <div class="dashboard-header">
-    <h2>👋 Welcome, <span id="dashName">User</span>!</h2>
-    <p>Track your volunteering journey and discover new opportunities.</p>
-  </div>
-  <div class="dashboard-stats">
-    <div class="dash-stat"><div class="dash-stat-num" id="myAppCount">0</div><div class="dash-stat-label">Applications</div></div>
-    <div class="dash-stat"><div class="dash-stat-num" id="myApprovedCount">0</div><div class="dash-stat-label">Approved</div></div>
-    <div class="dash-stat"><div class="dash-stat-num" id="myPendingCount">0</div><div class="dash-stat-label">Pending</div></div>
-    <div class="dash-stat"><div class="dash-stat-num" id="myRejectedCount">0</div><div class="dash-stat-label">Rejected</div></div>
-  </div>
-  <div class="section">
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('myApps',this)">📋 My Applications</button>
-      <button class="tab" onclick="switchTab('browseEvents',this)">🌿 Browse Events</button>
-      <button class="tab" onclick="switchTab('myCerts',this)">🏆 Certificates</button>
+  
+  <div class="welcome-banner">
+
+    <div>
+
+        <h1>
+            👋 Welcome back,
+            <span id="dashName">User</span>
+        </h1>
+
+        <p>
+            Ready to make a difference today?
+            Join events and help your community.
+        </p>
+
     </div>
-      <div id="qrScannerSection">
-    <h3>📷 Scan Event QR</h3>
-    <button class="btn btn-green" onclick="startQrScanner()"> 📷 Scan QR </button>
-    <div id="qr-reader" style="width:300px"></div>
+
+    <button
+        class="browse-events-btn"
+        onclick="document.querySelectorAll('.tab')[1].click()">
+
+        🌿 Browse Events
+
+    </button>
+
 </div>
-    <div id="myApps"><div id="myAppsList"><div class="loading"><div class="spinner"></div>Loading...</div></div></div>
+
+
+  <div class="dashboard-stats">
+
+    <div class="stat-card applications">
+
+        <div class="stat-icon">📄</div>
+
+        <div class="stat-content">
+            <h2 id="myAppCount">0</h2>
+            <p>Total Applications</p>
+        </div>
+
+    </div>
+
+    <div class="stat-card approved">
+
+        <div class="stat-icon">✅</div>
+
+        <div class="stat-content">
+            <h2 id="myApprovedCount">0</h2>
+            <p>Approved</p>
+        </div>
+
+    </div>
+
+    <div class="stat-card pending">
+
+        <div class="stat-icon">⏳</div>
+
+        <div class="stat-content">
+            <h2 id="myPendingCount">0</h2>
+            <p>Pending</p>
+        </div>
+
+    </div>
+
+    <div class="stat-card rejected">
+
+        <div class="stat-icon">❌</div>
+
+        <div class="stat-content">
+            <h2 id="myRejectedCount">0</h2>
+            <p>Rejected</p>
+        </div>
+
+    </div>
+
+</div>
+
+
+  <div class="section">
+
+    <div class="tabs">
+
+        <button class="tab active"
+                onclick="switchTab('myApps',this)">
+            📋 My Applications<div class="applications-search">
+        </button>
+
+        <button class="tab"
+                onclick="switchTab('browseEvents',this)">
+            🌿 Browse Events
+        </button>
+
+        <button class="tab"
+                onclick="switchTab('myCerts',this)">
+            🏆 Certificates
+        </button>
+
+    </div>
+
+    <!-- Dashboard Feature Cards -->
+
+    <div class="dashboard-features">
+
+        <!-- Scan Attendance -->
+
+        <div class="feature-card">
+
+            <div class="feature-icon">
+                📷
+            </div>
+
+            <h3>Scan Attendance</h3>
+
+            <p>
+                Scan the event QR code to mark your attendance instantly.
+            </p>
+
+            <button class="feature-btn"
+                    onclick="startQrScanner()">
+
+                📷 Scan QR
+
+            </button>
+
+            <div id="qr-reader"></div>
+
+        </div>
+
+        <!-- Upcoming Event -->
+
+        <div class="feature-card">
+
+            <div class="feature-icon">
+                📅
+            </div>
+
+            <h3>Upcoming Event</h3>
+
+            <p id="nextEventText">
+
+                No upcoming events available.
+
+            </p>
+
+            <button class="feature-btn secondary"
+                    onclick="document.querySelectorAll('.tab')[1].click()">
+
+                🌿 Browse Events
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- My Applications -->
+
+    <div id="myApps">
+
+        <div id="myAppsList">
+
+            <div class="loading">
+
+                <div class="spinner"></div>
+
+                Loading...
+
+            </div>
+
+        </div>
+
+    </div>
+
     <div id="browseEvents" style="display:none;">
-      <div class="cards-grid" id="dashEventsList"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+
+        <div class="cards-grid" id="dashEventsList">
+
+            <div class="loading">
+
+                <div class="spinner"></div>
+
+                Loading...
+
+            </div>
+
+        </div>
+
     </div>
+
     <div id="myCerts" style="display:none;">
-      <div id="certsList"></div>
+
+        <div id="certsList"></div>
+
     </div>
-  </div>
+
 </div>
 
 <!-- ══════════ ADMIN DASHBOARD ══════════ -->
@@ -268,11 +433,63 @@
     </div>
 </div>
 
+<!-- EVENT DETAILS MODAL -->
+
+<div class="modal-overlay" id="eventModal">
+
+    <div class="modal event-modal">
+
+        <div class="event-modal-icon" id="modalIcon">
+            🌿
+        </div>
+
+        <h2 id="modalTitle"></h2>
+
+        <div class="event-rating" id="modalRating"></div>
+
+        <div class="event-info">
+
+            <div>📅 <span id="modalDate"></span></div>
+
+            <div>📍 <span id="modalLocation"></span></div>
+
+        </div>
+
+        <p id="modalDescription"></p>
+
+        <div class="modal-actions">
+
+            <button
+                class="btn"
+                style="background:#ddd;color:#333;"
+                onclick="closeModal('eventModal')">
+
+                Close
+
+            </button>
+
+            <button
+                class="btn btn-green"
+                id="modalApplyBtn">
+
+                Apply Now
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
 <footer><strong>VolunteerHub</strong> — NGO Volunteering Platform &nbsp;|&nbsp; Spring Boot + MySQL &nbsp;|&nbsp; Built with ❤️</footer>
 
 <script src="/js/api.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/events.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
 <script src="/js/applications.js"></script>
 <script src="/js/admin.js"></script>
 <script src="/js/app.js"></script>

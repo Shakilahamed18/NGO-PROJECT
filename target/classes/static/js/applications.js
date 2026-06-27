@@ -1,43 +1,66 @@
-function startQrScanner() {
+async function startQrScanner() {
+
+    const qrReader = document.getElementById("qr-reader");
+    qrReader.style.display = "block";
 
     const html5QrCode = new Html5Qrcode("qr-reader");
 
-    html5QrCode.start(
-        { facingMode: "environment" },
-        {
-            fps: 10,
-            qrbox: 250
-        },
-        async (decodedText) => {
+    try {
 
-            console.log("Scanned QR:", decodedText);
-            alert("Scanned QR: " + decodedText);
+        await html5QrCode.start(
+            { facingMode: "environment" }, // On laptops, you can change to "user"
+            {
+                fps: 10,
+                qrbox: 250
+            },
 
-            try {
+            async (decodedText) => {
 
-                const response = await api(
-                    `/api/attendance/checkin/${decodedText}`,
-                    "POST"
-                );
+                console.log("Scanned QR:", decodedText);
 
-                console.log(response);
+                try {
 
-                toast("Attendance marked successfully ✅", "success");
+                    const response = await api(
+                        `/api/attendance/checkin/${decodedText}`,
+                        "POST"
+                    );
 
-                await html5QrCode.stop();
+                    console.log(response);
 
-            } catch (e) {
+                    toast("Attendance marked successfully ✅", "success");
 
-                console.error(e);
+                    await html5QrCode.stop();
 
-                alert(JSON.stringify(e));
+                    qrReader.style.display = "none";
+                    qrReader.innerHTML = "";
 
-                toast(e.message || "Attendance failed", "error");
+                } catch (e) {
+
+                    console.error(e);
+
+                    toast(e.message || "Attendance failed", "error");
+
+                }
+
+            },
+
+            (errorMessage) => {
+                // Ignore scan errors while searching for a QR code
+                // console.log(errorMessage);
             }
 
-        }
-    );
+        );
+
+    } catch (err) {
+
+        console.error(err);
+
+        toast("Unable to start camera", "error");
+
+    }
 }
+
+
 function showCertificate(appId, eventName, eventDate) {
   document.getElementById('certName').textContent = userName || userEmail;
   document.getElementById('certEvent').textContent = eventName;
@@ -132,27 +155,117 @@ async function loadMyApplications() {
       return;
     }
     el.innerHTML = `
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Event</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody>
-            ${apps.map(a=>`
-              <tr>
-                <td><strong>${a.eventTitle}</strong></td>
-                <td><span class="status ${a.status}">${a.status}</span></td>
-                <td style="display:flex;gap:6px;flex-wrap:wrap;">
-                  ${a.status==='COMPLETED' ? `
-  <button class="btn" style="background:#d1e7dd;color:#0a3622;padding:6px 10px;font-size:12px;"
-    onclick="showCertificate(${a.id},'${a.eventTitle}','${a.eventDate || ''}')">🏆 Certificate</button>
-  <button class="btn" style="background:#fff3cd;color:#856404;padding:6px 10px;font-size:12px;"
-    onclick="openRateModal(${a.eventId},'${a.eventTitle}')">⭐ Rate</button>
-` : '—'}
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
+<div class="applications-container">
+
+<div class="applications-header">
+
+      <h2>📋 My Applications</h2>
+
+      
+
+    </div>
+
+    <div class="table-wrap">
+
+        <table class="applications-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>🌿 Event</th>
+
+                    <th>📅 Date</th>
+
+                    <th>Status</th>
+
+                    <th style="text-align:center;">Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                ${apps.map(a => `
+
+                <tr>
+
+                    <td>
+
+                        <div class="event-info">
+<div class="event-logo">
+    ${['🌿','🌊','🌳','🏥','📚','🎨','🤝','🌍'][a.eventId % 8]}
+</div>
+
+                            <div>
+
+                                <div class="event-title">
+
+                                    ${a.eventTitle}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+
+                    <td>
+
+                        ${a.eventDate ? fmtDate(a.eventDate) : "-"}
+
+                    </td>
+
+                    <td>
+
+                        <span class="status ${a.status}">
+
+                            ${a.status}
+
+                        </span>
+
+                    </td>
+
+                    <td class="actions">
+
+                        ${
+                            a.status === "COMPLETED"
+                            ? `
+                            <button
+                                class="mini-btn certificate"
+                                onclick="showCertificate(${a.id},'${a.eventTitle}','${a.eventDate || ''}')">
+
+                                🏆
+
+                            </button>
+
+                            <button
+                                class="mini-btn rating"
+                                onclick="openRateModal(${a.eventId},'${a.eventTitle}')">
+
+                                ⭐
+
+                            </button>
+                            `
+                            : `<span class="no-action">No Actions</span>`
+                        }
+
+                    </td>
+
+                </tr>
+
+                `).join("")}
+
+            </tbody>
+
         </table>
-      </div>`;
+
+    </div>
+
+</div>
+`;
   } catch(e) {
     el.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>${e.message}</h3></div>`;
   }

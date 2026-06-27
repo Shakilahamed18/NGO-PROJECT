@@ -1,28 +1,88 @@
-function eventCard(ev, showApply=false, showDelete=false) {
-  const icons = ['🌿','🌊','🏥','🌳','🤝','📚','🎨','🌍'];
-  const icon = icons[ev.id % icons.length];
-  const avgRating = getAvgRating(ev.id);
-  const ratingHtml = avgRating > 0
-    ? `<div class="rating-display"><span class="stars-show">${'★'.repeat(Math.round(avgRating))}</span><span>${avgRating.toFixed(1)}/5</span></div>`
-    : `<div class="rating-display" style="color:#ccc;font-size:12px;">No ratings yet</div>`;
-  return `
-    <div class="card">
-      <div class="card-top">
-        <div class="card-icon">${icon}</div>
-        <div class="card-title">${ev.title}</div>
-        <div class="card-date">📅 ${fmtDate(ev.date)}</div>
-      </div>
-      <div class="card-body">
-        <div class="card-desc">${ev.description||'No description provided.'}</div>
-        <div class="card-meta">📍 ${ev.location}</div>
-        ${ratingHtml}
-        <div class="card-actions">
-          ${showApply ? `<button class="btn btn-green" style="padding:8px 16px;font-size:13px;" onclick="applyEvent(${ev.id},this)">✋ Apply</button>` : ''}
-          ${showDelete ? `<button class="btn btn-danger" style="padding:8px 16px;font-size:13px;" onclick="deleteEvent(${ev.id})">🗑 Delete</button>` : ''}
-          ${!showApply && !showDelete && !token ? `<button class="btn btn-green" style="padding:8px 16px;font-size:13px;" onclick="showPage('login')">Login to Apply</button>` : ''}
+function eventCard(ev, showApply = false, showDelete = false) {
+
+    const icons = ['🌿', '🌊', '🏥', '🌳', '🤝', '📚', '🎨', '🌍'];
+    const icon = icons[ev.id % icons.length];
+
+    const avgRating = getAvgRating(ev.id);
+
+    const ratingHtml = avgRating > 0
+        ? `<div class="rating-display">
+                <span class="stars-show">⭐ ${avgRating.toFixed(1)}</span>
+           </div>`
+        : `<div class="rating-display no-rating">
+                ⭐ No Ratings
+           </div>`;
+
+    return `
+
+    <div class="event-card">
+
+        <div class="event-header">
+
+            <div class="event-icon">
+                ${icon}
+            </div>
+
+            <div>
+
+                <h3>${ev.title}</h3>
+
+                <span class="event-date">
+                    📅 ${fmtDate(ev.date)}
+                </span>
+
+            </div>
+
         </div>
-      </div>
-    </div>`;
+
+        <p class="event-description">
+
+            ${ev.description || "No description available."}
+
+        </p>
+
+        <div class="event-location">
+
+            📍 ${ev.location}
+
+        </div>
+
+        ${ratingHtml}
+
+        <div class="event-footer">
+
+            ${
+                showApply
+                ? `<button class="apply-btn"
+                        onclick="applyEvent(${ev.id},this)">
+                        Apply Now →
+                   </button>`
+                : ""
+            }
+
+            ${
+                showDelete
+                ? `<button class="delete-btn"
+                        onclick="deleteEvent(${ev.id})">
+                        Delete
+                   </button>`
+                : ""
+            }
+
+            ${
+                !showApply && !showDelete && !token
+                ? `<button class="apply-btn"
+                        onclick="showPage('login')">
+                        Login to Apply
+                   </button>`
+                : ""
+            }
+
+        </div>
+
+    </div>
+
+    `;
 }
 
 // ══════════════════════════════════════
@@ -89,15 +149,45 @@ function clearSearch() {
   loadAllEvents();
 }
 async function loadDashEvents() {
-  const el = document.getElementById('dashEventsList');
-  el.innerHTML = `<div class="loading"><div class="spinner"></div>Loading...</div>`;
-  try {
-    const events = await api('/api/events');
-    el.innerHTML = events.map(ev => eventCard(ev, true)).join('') ||
-      `<div class="empty"><div class="empty-icon">📭</div><h3>No events</h3></div>`;
-  } catch(e) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>${e.message}</h3></div>`;
-  }
+
+    const el = document.getElementById("dashEventsList");
+
+    el.innerHTML = `<div class="loading"><div class="spinner"></div>Loading...</div>`;
+
+    try {
+
+        const events = await api("/api/events");
+
+        // Update Upcoming Event Card
+        const next = document.getElementById("nextEventText");
+
+        if (events.length > 0) {
+
+            next.innerHTML = `
+                <strong>${events[0].title}</strong><br>
+                📍 ${events[0].location}<br>
+                📅 ${fmtDate(events[0].date)}
+            `;
+
+        } else {
+
+            next.innerHTML = "No upcoming events available.";
+
+        }
+
+        el.innerHTML = events.map(ev => eventCard(ev, true)).join("");
+
+    } catch (e) {
+
+        el.innerHTML = `
+            <div class="empty">
+                <div class="empty-icon">⚠️</div>
+                <h3>${e.message}</h3>
+            </div>
+        `;
+
+    }
+
 }
 
 function getAvgRating(eventId) {
@@ -171,3 +261,77 @@ async function loadAllEvents() {
   }
 }
 
+
+function openEventModal(ev, showApply){
+
+    const icons=['🌿','🌊','🏥','🌳','🤝','📚','🎨','🌍'];
+
+    document.getElementById("modalIcon").innerHTML =
+        icons[ev.id % icons.length];
+
+    document.getElementById("modalTitle").innerHTML =
+        ev.title;
+
+    document.getElementById("modalDate").innerHTML =
+        fmtDate(ev.date);
+
+    document.getElementById("modalLocation").innerHTML =
+        ev.location;
+
+    document.getElementById("modalDescription").innerHTML =
+        ev.description || "No description available.";
+
+    const rating=getAvgRating(ev.id);
+
+    document.getElementById("modalRating").innerHTML =
+        rating>0
+        ? `⭐ ${rating.toFixed(1)} / 5`
+        : "⭐ No ratings yet";
+
+    const btn=document.getElementById("modalApplyBtn");
+
+    if(showApply){
+
+        btn.style.display="inline-block";
+
+        btn.onclick=()=>{
+
+            applyEvent(ev.id);
+
+            closeModal("eventModal");
+
+        };
+
+    }else{
+
+        btn.style.display="none";
+
+    }
+
+    openModal("eventModal");
+
+}
+
+function loadUpcomingEvent(events){
+
+    const txt=document.getElementById("nextEventText");
+
+    if(!txt) return;
+
+    if(!events || events.length===0){
+
+        txt.innerHTML="No upcoming events available.";
+
+        return;
+
+    }
+
+    const event=events[0];
+
+    txt.innerHTML=`
+        <strong>${event.title}</strong><br>
+        📍 ${event.location}<br>
+        📅 ${fmtDate(event.date)}
+    `;
+
+}
