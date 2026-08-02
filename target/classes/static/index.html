@@ -196,17 +196,17 @@
     <div class="tabs">
 
         <button class="tab active"
-                onclick="switchTab('myApps',this)">
-            📋 My Applications<div class="applications-search">
+                onclick="switchUserTab('myApps',this)">
+            📋 My Applications
         </button>
 
         <button class="tab"
-                onclick="switchTab('browseEvents',this)">
+                onclick="switchUserTab('browseEvents',this)">
             🌿 Browse Events
         </button>
 
         <button class="tab"
-                onclick="switchTab('myCerts',this)">
+                onclick="switchUserTab('myCerts',this)">
             🏆 Certificates
         </button>
 
@@ -309,6 +309,7 @@
     </div>
 
 </div>
+</div>
 
 <!-- ══════════ ADMIN DASHBOARD ══════════ -->
 <div id="page-admin" class="page">
@@ -324,8 +325,8 @@
   </div>
   <div class="section">
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('adminEvents',this)">📅 Events</button>
-      <button class="tab" onclick="switchTab('adminApps',this)">📋 Applications</button>
+      <button class="tab active" onclick="switchAdminTab('adminEvents',this)">📅 Events</button>
+      <button class="tab" onclick="switchAdminTab('adminApps',this)">📋 Applications</button>
     </div>
     <div id="adminEvents">
       <div style="margin-bottom:16px;text-align:right;">

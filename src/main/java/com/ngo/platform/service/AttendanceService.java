@@ -8,6 +8,9 @@ import com.ngo.platform.repository.ApplicationRepository;
 import com.ngo.platform.repository.EventRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.ngo.platform.dto.AttendanceListResponse;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import java.time.LocalDateTime;
 
@@ -61,4 +64,16 @@ public class AttendanceService {
                 application.getAttendedAt()
         );
     }
+    public List<AttendanceListResponse> getAllAttendance() {
+
+    return applicationRepository.findByAttendedTrue()
+            .stream()
+            .map(app -> new AttendanceListResponse(
+                    app.getUser().getName(),
+                    app.getEvent().getTitle(),
+                    app.getAttendedAt()
+            ))
+            .collect(Collectors.toList());
+
+}
 }

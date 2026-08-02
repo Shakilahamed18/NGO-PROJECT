@@ -12,18 +12,22 @@ public class ApplicationResponse {
     private String eventTitle;
     private LocalDateTime eventDate;
     private String status;
+    private boolean attended;
+    private String certificatePath;
 
     public ApplicationResponse() {
     }
 
     public ApplicationResponse(Long id,
-                               Long userId,
-                               String userName,
-                               String userEmail,
-                               Long eventId,
-                               String eventTitle,
-                               LocalDateTime eventDate,
-                               String status) {
+            Long userId,
+            String userName,
+            String userEmail,
+            Long eventId,
+            String eventTitle,
+            LocalDateTime eventDate,
+            String status,
+            boolean attended,
+            String certificatePath) {
         this.id = id;
         this.userId = userId;
         this.userName = userName;
@@ -32,6 +36,8 @@ public class ApplicationResponse {
         this.eventTitle = eventTitle;
         this.eventDate = eventDate;
         this.status = status;
+        this.attended = attended;
+        this.certificatePath = certificatePath;
     }
 
     public Long getId() {
@@ -66,6 +72,14 @@ public class ApplicationResponse {
         return status;
     }
 
+    public boolean isAttended() {
+        return attended;
+    }
+
+    public String getCertificatePath() {
+        return certificatePath;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -98,6 +112,14 @@ public class ApplicationResponse {
         this.status = status;
     }
 
+    public void setAttended(boolean attended) {
+        this.attended = attended;
+    }
+
+    public void setCertificatePath(String certificatePath) {
+        this.certificatePath = certificatePath;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -112,6 +134,8 @@ public class ApplicationResponse {
         private String eventTitle;
         private LocalDateTime eventDate;
         private String status;
+        private boolean attended;
+        private String certificatePath;
 
         public Builder id(Long id) {
             this.id = id;
@@ -153,6 +177,16 @@ public class ApplicationResponse {
             return this;
         }
 
+        public Builder attended(boolean attended) {
+            this.attended = attended;
+            return this;
+        }
+
+        public Builder certificatePath(String certificatePath) {
+            this.certificatePath = certificatePath;
+            return this;
+        }
+
         public ApplicationResponse build() {
             return new ApplicationResponse(
                     id,
@@ -162,8 +196,9 @@ public class ApplicationResponse {
                     eventId,
                     eventTitle,
                     eventDate,
-                    status
-            );
+                    status,
+                    attended,
+                    certificatePath);
         }
     }
 }

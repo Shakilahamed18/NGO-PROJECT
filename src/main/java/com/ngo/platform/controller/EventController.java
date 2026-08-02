@@ -49,6 +49,14 @@ public class EventController {
         return ResponseEntity.ok("Event deleted successfully");
     }
 
+    @PutMapping("/update/{id}")
+public ResponseEntity<EventResponse> updateEvent(
+        @PathVariable Long id,
+        @Valid @RequestBody EventRequest request) {
+
+    return ResponseEntity.ok(eventService.updateEvent(id, request));
+}
+
     @GetMapping("/whoami")
 public String whoami(Authentication authentication) {
     return authentication.getName() + " -> " + authentication.getAuthorities();

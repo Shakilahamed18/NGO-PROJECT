@@ -1,5 +1,6 @@
 package com.ngo.platform.config;
 
+import org.springframework.web.cors.CorsConfigurationSource;
 import com.ngo.platform.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,93 +24,93 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
-    private final UserDetailsService userDetailsService;
+        private final JwtAuthenticationFilter jwtAuthFilter;
+        private final UserDetailsService userDetailsService;
 
-    public SecurityConfig(
-            JwtAuthenticationFilter jwtAuthFilter,
-            UserDetailsService userDetailsService) {
+        public SecurityConfig(
+                        JwtAuthenticationFilter jwtAuthFilter,
+                        UserDetailsService userDetailsService) {
 
-        this.jwtAuthFilter = jwtAuthFilter;
-        this.userDetailsService = userDetailsService;
-    }
+                this.jwtAuthFilter = jwtAuthFilter;
+                this.userDetailsService = userDetailsService;
+        }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        http
-                .csrf(AbstractHttpConfigurer::disable)
+                http
+                                .cors(cors -> {
+                                })
+                                .csrf(AbstractHttpConfigurer::disable)
 
-                .authorizeHttpRequests(auth -> auth
+                                .authorizeHttpRequests(auth -> auth
 
-                        // Swagger
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/webjars/**"
-                        ).permitAll()
+                                                // Swagger
+                                                .requestMatchers(
+                                                                "/swagger-ui/**",
+                                                                "/swagger-ui.html",
+                                                                "/v3/api-docs/**",
+                                                                "/webjars/**")
+                                                .permitAll()
 
-                        // Static files
-                        .requestMatchers(
-                                "/",
-                                "/index.html",
-                                "/*.html",
-                                "/*.css",
-                                "/*.js"
-                        ).permitAll()
+                                                // Static files
+                                                .requestMatchers(
+                                                                "/",
+                                                                "/index.html",
+                                                                "/*.html",
+                                                                "/*.css",
+                                                                "/*.js")
+                                                .permitAll()
 
-                        // Authentication
-                        .requestMatchers("/api/auth/**").permitAll()
+                                                // Authentication
+                                                .requestMatchers("/api/auth/**").permitAll()
 
-                        // Events
-                        .requestMatchers("/api/events/**").permitAll()
+                                                // Events
+                                                .requestMatchers("/api/events/**").permitAll()
 
-                        // Applications
-                        .requestMatchers("/api/applications/**").permitAll()
+                                                // Applications
+                                                .requestMatchers("/api/applications/**").permitAll()
 
-                        // Attendance
-                        .requestMatchers("/api/attendance/**").permitAll()
+                                                // Attendance
+                                                .requestMatchers("/api/attendance/**").permitAll()
 
-                        // Everything else
-                        .anyRequest().permitAll()
-                )
+                                                // Profile
+                                                .requestMatchers("/api/profile/**").authenticated()
 
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                                                // Everything else
+                                                .anyRequest().permitAll())
 
-                .authenticationProvider(authenticationProvider())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .addFilterBefore(
-                        jwtAuthFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                );
+                                .authenticationProvider(authenticationProvider())
 
-        return http.build();
-    }
+                                .addFilterBefore(
+                                                jwtAuthFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
+                return http.build();
+        }
 
-        DaoAuthenticationProvider provider =
-                new DaoAuthenticationProvider();
+        @Bean
+        public AuthenticationProvider authenticationProvider() {
 
-        provider.setUserDetailsService(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
+                DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
 
-        return provider;
-    }
+                provider.setUserDetailsService(userDetailsService);
+                provider.setPasswordEncoder(passwordEncoder());
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+                return provider;
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config
-    ) throws Exception {
-        return config.getAuthenticationManager();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
+
+        @Bean
+        public AuthenticationManager authenticationManager(
+                        AuthenticationConfiguration config) throws Exception {
+                return config.getAuthenticationManager();
+        }
 }

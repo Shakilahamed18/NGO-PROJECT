@@ -1,5 +1,8 @@
-function loadAdminDashboard() { loadAdminEvents(); }
-
+function loadAdminDashboard() {
+    console.log("Admin dashboard loaded");
+    loadAdminEvents();
+    loadAdminApps();
+}
 async function loadAdminEvents() {
   const el = document.getElementById('adminEventsBody');
 
@@ -38,6 +41,8 @@ async function loadAdminEvents() {
         </td>
       </tr>
     `).join('');
+    console.log("Rows:", el.rows.length);
+console.log("HTML:", el.innerHTML);
 
   } catch (e) {
     console.error("loadAdminEvents ERROR:", e);

@@ -23,7 +23,7 @@ public class Event {
     private String description;
 
     @NotNull(message = "Event date is required")
-    @Future(message = "Event date must be in the future")
+    @Future
     @Column(nullable = false)
     private LocalDateTime date;
 
@@ -54,21 +54,57 @@ public class Event {
         this.qrToken = qrToken;
     }
 
-    public Long getId() { return id; }
-    public String getTitle() { return title; }
-    public String getDescription() { return description; }
-    public LocalDateTime getDate() { return date; }
-    public String getLocation() { return location; }
-    public String getQrToken() { return qrToken; }
+    public Long getId() {
+        return id;
+    }
 
-    public void setId(Long id) { this.id = id; }
-    public void setTitle(String title) { this.title = title; }
-    public void setDescription(String description) { this.description = description; }
-    public void setDate(LocalDateTime date) { this.date = date; }
-    public void setLocation(String location) { this.location = location; }
-    public void setQrToken(String qrToken) { this.qrToken = qrToken; }
+    public String getTitle() {
+        return title;
+    }
 
-    public static Builder builder() { return new Builder(); }
+    public String getDescription() {
+        return description;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public String getQrToken() {
+        return qrToken;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setDate(LocalDateTime date) {
+        this.date = date;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public void setQrToken(String qrToken) {
+        this.qrToken = qrToken;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static class Builder {
         private Long id;
@@ -78,12 +114,35 @@ public class Event {
         private String location;
         private String qrToken;
 
-        public Builder id(Long id) { this.id = id; return this; }
-        public Builder title(String title) { this.title = title; return this; }
-        public Builder description(String description) { this.description = description; return this; }
-        public Builder date(LocalDateTime date) { this.date = date; return this; }
-        public Builder location(String location) { this.location = location; return this; }
-        public Builder qrToken(String qrToken) { this.qrToken = qrToken; return this; }
+        public Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder title(String title) {
+            this.title = title;
+            return this;
+        }
+
+        public Builder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public Builder date(LocalDateTime date) {
+            this.date = date;
+            return this;
+        }
+
+        public Builder location(String location) {
+            this.location = location;
+            return this;
+        }
+
+        public Builder qrToken(String qrToken) {
+            this.qrToken = qrToken;
+            return this;
+        }
 
         public Event build() {
             return new Event(id, title, description, date, location, qrToken);

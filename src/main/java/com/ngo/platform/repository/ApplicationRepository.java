@@ -15,16 +15,19 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     List<Application> findByEventId(Long eventId);
 
+    long countByAttendedTrue();
+
     Optional<Application> findByUserEmailAndEventId(
-        String email,
-        Long eventId
-);
+            String email,
+            Long eventId);
 
     @Query("""
-           SELECT a
-           FROM Application a
-           JOIN FETCH a.user
-           JOIN FETCH a.event
-           """)
+            SELECT a
+            FROM Application a
+            JOIN FETCH a.user
+            JOIN FETCH a.event
+            """)
     List<Application> findAllWithUserAndEvent();
+
+    List<Application> findByAttendedTrue();
 }

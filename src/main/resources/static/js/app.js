@@ -20,30 +20,81 @@ function updateNav() {
   }
 }
 
+
 // ── ROUTING ──
 function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  window.scrollTo(0,0);
-  if (name==='home')      loadHomeEvents();
-  if (name==='events')    loadAllEvents();
-  if (name==='dashboard') loadDashboard();
-  if (name==='admin')     loadAdminDashboard();
+    // Hide all pages
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+    // Show selected page
+    document.getElementById('page-' + name).classList.add('active');
+
+    window.scrollTo(0, 0);
+
+    if (name === 'home') {
+        loadHomeEvents();
+    }
+
+    if (name === 'events') {
+        loadAllEvents();
+    }
+
+    if (name === 'dashboard') {
+        loadDashboard();
+
+        // Reset user tabs
+        document.getElementById('myApps').style.display = 'block';
+        document.getElementById('browseEvents').style.display = 'none';
+        document.getElementById('myCerts').style.display = 'none';
+
+        // Highlight first user tab
+        document.querySelectorAll('#page-dashboard .tab').forEach(t => t.classList.remove('active'));
+        document.querySelector('#page-dashboard .tab').classList.add('active');
+    }
+
+    if (name === 'admin') {
+        loadAdminDashboard();
+
+        // Reset admin tabs
+        document.getElementById('adminEvents').style.display = 'block';
+        document.getElementById('adminApps').style.display = 'none';
+
+        // Highlight first admin tab
+        document.querySelectorAll('#page-admin .tab').forEach(t => t.classList.remove('active'));
+        document.querySelector('#page-admin .tab').classList.add('active');
+    }
 }
 
-function switchTab(tabId, btn) {
-  const section = btn.closest('.section');
-  section.querySelectorAll('[id]').forEach(el => {
-    if (['myApps','browseEvents','myCerts','adminEvents','adminApps'].includes(el.id))
-      el.style.display = 'none';
-  });
-  section.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(tabId).style.display = 'block';
-  btn.classList.add('active');
-  if (tabId==='browseEvents') loadDashEvents();
-  if (tabId==='adminApps')    loadAdminApps();
-  if (tabId==='adminEvents')  loadAdminEvents();
-  if (tabId==='myCerts')      loadCertificates();
+
+
+function switchUserTab(tabId, btn){
+    ['myApps','browseEvents','myCerts'].forEach(id=>{
+        document.getElementById(id).style.display='none';
+    });
+
+    btn.parentElement.querySelectorAll('.tab')
+       .forEach(t=>t.classList.remove('active'));
+
+    document.getElementById(tabId).style.display='block';
+    btn.classList.add('active');
+
+    if(tabId==='browseEvents') loadDashEvents();
+    if(tabId==='myCerts') loadCertificates();
+}
+
+function switchAdminTab(tabId, btn){
+    ['adminEvents','adminApps'].forEach(id=>{
+        document.getElementById(id).style.display='none';
+    });
+
+    btn.parentElement.querySelectorAll('.tab')
+       .forEach(t=>t.classList.remove('active'));
+
+    document.getElementById(tabId).style.display='block';
+    btn.classList.add('active');
+
+    if(tabId==='adminEvents') loadAdminEvents();
+    if(tabId==='adminApps') loadAdminApps();
 }
 
 function openCreateModal() { document.getElementById('createModal').classList.add('open'); }
