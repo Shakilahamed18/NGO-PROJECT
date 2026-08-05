@@ -1,0 +1,16 @@
+# React
+**/node_modules/
+**/dist/
+
+# Spring Boot
+**/target/
+
+# IDE
+.vscode/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
